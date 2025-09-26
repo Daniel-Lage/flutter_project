@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/components/person_component.dart';
-import 'package:flutter_project/models/person_model.dart';
+import 'package:flutter_project/components/contact_component.dart';
+import 'package:flutter_project/models/contact_model.dart';
 import 'package:flutter_project/services/database_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -11,58 +11,55 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Person> _personList = <Person>[];
-  final TextEditingController _controller = TextEditingController();
+  List<Contact> _contactList = <Contact>[];
   final DatabaseService _databaseService = DatabaseService.instance;
 
-  String text = "";
-
-  void _addPerson() {
-    if (_personList.any((person) => person.name == text)) return;
-    final person = Person(name: text);
-    _databaseService.addPerson(person);
+  void _removeContact(String name) {
+    _databaseService.removeContact(name);
     setState(() {
-      _personList.add(person);
-      text = "";
-    });
-    _controller.clear();
-  }
-
-  void _removePerson(String name) {
-    _databaseService.removePerson(name);
-    setState(() {
-      _personList.removeWhere((person) => person.name == name);
+      _contactList.removeWhere((contact) => contact.name == name);
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Object? args = ModalRoute.of(context)?.settings.arguments;
-
-      if (args == null) {
-        loadState();
-        return;
-      }
-
-      final updatedPerson = args as Person;
-
-      final index = _personList.indexWhere(
-        (person) => person.name == updatedPerson.name,
-      );
-
-      setState(() {
-        _personList[index] = updatedPerson;
-      });
-    });
+  _HomePageState() {
+    loadState();
   }
 
   Future<void> loadState() async {
-    final personTable = await _databaseService.getPeopleTable();
+    final contactTable = await _databaseService.getContactsTable();
 
     setState(() {
-      _personList = personTable;
+      _contactList = contactTable;
+    });
+  }
+
+  Future<void> _goToNewContact() async {
+    Object? args = await Navigator.of(context).pushNamed("/new");
+
+    if (args == null) return;
+
+    final newContact = args as Contact;
+
+    setState(() {
+      _contactList.add(newContact);
+    });
+  }
+
+  Future<void> _goToContact(Contact contact) async {
+    Object? args = await Navigator.of(
+      context,
+    ).pushNamed('/contact', arguments: contact);
+
+    if (args == null) return;
+
+    final updatedContact = args as Contact;
+
+    final index = _contactList.indexWhere(
+      (contact) => contact.name == updatedContact.name,
+    );
+
+    setState(() {
+      _contactList[index] = updatedContact;
     });
   }
 
@@ -73,9 +70,10 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         iconTheme: IconThemeData(
           color: Theme.of(context).colorScheme.onPrimary,
+          size: 40,
         ),
         title: Text(
-          'Lista de Pessoas',
+          'Contatos',
           style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
         ),
         leading: IconButton(
@@ -85,43 +83,35 @@ class _HomePageState extends State<HomePage> {
       ),
       body: ListView(
         children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            spacing: 10,
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsetsGeometry.symmetric(vertical: 10),
-                child: SizedBox(
-                  width: 300,
-                  child: TextField(
-                    controller: _controller,
-                    onSubmitted: (_) => text.isEmpty ? null : _addPerson(),
-                    onChanged: (value) {
-                      setState(() {
-                        (text = value);
-                      });
-                    },
-                    keyboardType: TextInputType.text,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Nome',
-                    ),
-                  ),
+          ..._contactList.map(
+            (contact) => Column(
+              children: [
+                ContactComponent(
+                  contact: contact,
+                  delete: () => _removeContact(contact.name),
+                  goTo: () => _goToContact(contact),
                 ),
-              ),
-              IconButton(
-                onPressed: text.isEmpty ? null : _addPerson,
-                icon: Icon(Icons.add),
-              ),
-            ],
-          ),
-          ..._personList.map(
-            (person) => PersonComponent(
-              person: person,
-              delete: () => _removePerson(person.name),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  width: MediaQuery.of(context).size.width - 50,
+                  height: 2,
+                ),
+              ],
             ),
           ),
         ],
+      ),
+      floatingActionButton: IconButton(
+        style: IconButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+        onPressed: _goToNewContact,
+        icon: Icon(Icons.add),
+        iconSize: 40,
+        color: Theme.of(context).colorScheme.onPrimary,
+        padding: EdgeInsetsGeometry.all(10),
       ),
     );
   }

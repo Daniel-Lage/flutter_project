@@ -1,9 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_project/dark_theme_notifier.dart';
+import 'package:flutter_project/notifiers/dark_theme_notifier.dart';
 import 'package:flutter_project/pages/home_page.dart';
-import 'package:flutter_project/pages/person_page.dart';
+import 'package:flutter_project/pages/contact_page.dart';
+import 'package:flutter_project/pages/new_contact_page.dart';
 import 'package:flutter_project/pages/prefs_page.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:provider/provider.dart';
@@ -40,8 +41,9 @@ class MyApp extends StatelessWidget {
     initialRoute: '/',
     routes: {
       '/': (context) => HomePage(),
-      '/person': (context) => PersonPage(),
+      '/contact': (context) => ContactPage(),
       '/prefs': (context) => PrefsPage(),
+      '/new': (context) => NewContactPage(),
     },
   );
 }

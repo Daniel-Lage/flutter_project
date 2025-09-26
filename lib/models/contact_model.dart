@@ -1,7 +1,7 @@
-class Person {
+class Contact {
   final String name;
   int debt;
-  Person({required this.name, this.debt = 0});
+  Contact({required this.name, this.debt = 0});
 
   Map<String, Object> toMap() => {'name': name, "debt": debt};
 }

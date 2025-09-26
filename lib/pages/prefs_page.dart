@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/dark_theme_notifier.dart';
+import 'package:flutter_project/notifiers/dark_theme_notifier.dart';
 import 'package:provider/provider.dart';
 
 class PrefsPage extends StatelessWidget {

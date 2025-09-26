@@ -1,11 +1,11 @@
 class Transaction {
-  final String personName;
+  final String contactName;
   final int id;
   final int value;
   final TransactionType type;
 
   Transaction({
-    required this.personName,
+    required this.contactName,
     required this.id,
     required this.value,
     required this.type,

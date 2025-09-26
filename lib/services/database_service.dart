@@ -1,4 +1,4 @@
-import 'package:flutter_project/models/person_model.dart';
+import 'package:flutter_project/models/contact_model.dart';
 import 'package:flutter_project/models/transaction_model.dart';
 import 'package:sqflite/sqflite.dart' hide Transaction;
 import 'package:path/path.dart';
@@ -7,12 +7,12 @@ class DatabaseService {
   static final DatabaseService instance = DatabaseService._();
   DatabaseService._();
 
-  final String _peopleTableName = "people";
-  final String _peopleNameColumnName = "name";
-  final String _peopleDebtColumnName = "debt";
+  final String _contactsTableName = "contacts";
+  final String _contactsNameColumnName = "name";
+  final String _contactsDebtColumnName = "debt";
 
   final String _transactionsTableName = "transactions";
-  final String _transactionsPersonNameColumnName = "personName";
+  final String _transactionsContactNameColumnName = "contactName";
   final String _transactionsIdColumnName = "id";
   final String _transactionsValueColumnName = "value";
   final String _transactionsTypeColumnName = "type";
@@ -29,61 +29,80 @@ class DatabaseService {
     join(await getDatabasesPath(), 'main.db'),
     version: 1,
     onCreate: (db, version) {
-      db.execute('''CREATE TABLE $_peopleTableName (
-        $_peopleNameColumnName TEXT PRIMARY KEY,
-        $_peopleDebtColumnName INTEGER NOT NULL
+      db.execute('''CREATE TABLE $_contactsTableName (
+        $_contactsNameColumnName TEXT PRIMARY KEY,
+        $_contactsDebtColumnName INTEGER NOT NULL
       )''');
       db.execute('''CREATE TABLE $_transactionsTableName (
         $_transactionsIdColumnName INTEGER PRIMARY KEY,
-        $_transactionsPersonNameColumnName TEXT,
+        $_transactionsContactNameColumnName TEXT,
         $_transactionsValueColumnName INTEGER,
         $_transactionsTypeColumnName INTEGER
       )''');
     },
   );
 
-  Future<void> addPerson(Person person) async {
+  Future<void> addContact(Contact contact) async {
     final db = await database;
-    await db.insert(_peopleTableName, {
-      _peopleNameColumnName: person.name,
-      _peopleDebtColumnName: person.debt,
-    });
+
+    final hasContact = (await db.query(
+      _contactsTableName,
+      where: '$_contactsNameColumnName = ?',
+      whereArgs: [contact.name],
+    )).isNotEmpty;
+
+    if (!hasContact) {
+      await db.insert(_contactsTableName, {
+        _contactsNameColumnName: contact.name,
+        _contactsDebtColumnName: contact.debt,
+      });
+    }
   }
 
-  Future<void> removePerson(String name) async {
+  Future<void> removeContact(String name) async {
     final db = await database;
-    await db.delete(
-      _peopleTableName,
-      where: '$_peopleNameColumnName = ?',
+
+    final hasContact = (await db.query(
+      _contactsTableName,
+      where: '$_contactsNameColumnName = ?',
       whereArgs: [name],
-    );
-    await db.delete(
-      _transactionsTableName,
-      where: '$_transactionsPersonNameColumnName = ?',
-      whereArgs: [name],
-    );
+    )).isNotEmpty;
+
+    if (hasContact) {
+      await db.delete(
+        _contactsTableName,
+        where: '$_contactsNameColumnName = ?',
+        whereArgs: [name],
+      );
+
+      await db.delete(
+        _transactionsTableName,
+        where: '$_transactionsContactNameColumnName = ?',
+        whereArgs: [name],
+      );
+    }
   }
 
-  Future<List<Person>> getPeopleTable() async {
+  Future<List<Contact>> getContactsTable() async {
     final db = await database;
-    final peopleTable = await db.query(_peopleTableName);
-    return peopleTable
+    final contactsTable = await db.query(_contactsTableName);
+    return contactsTable
         .map(
-          (personMap) => Person(
-            name: personMap[_peopleNameColumnName] as String,
-            debt: personMap[_peopleDebtColumnName] as int,
+          (contactMap) => Contact(
+            name: contactMap[_contactsNameColumnName] as String,
+            debt: contactMap[_contactsDebtColumnName] as int,
           ),
         )
         .toList();
   }
 
-  Future<void> updatePerson(Person person) async {
+  Future<void> updateContact(Contact contact) async {
     final db = await database;
     await db.update(
-      _peopleTableName,
-      person.toMap(),
-      where: '$_peopleNameColumnName = ?',
-      whereArgs: [person.name],
+      _contactsTableName,
+      contact.toMap(),
+      where: '$_contactsNameColumnName = ?',
+      whereArgs: [contact.name],
     );
   }
 
@@ -94,8 +113,8 @@ class DatabaseService {
         .map(
           (transactionMap) => Transaction(
             id: transactionMap[_transactionsIdColumnName] as int,
-            personName:
-                transactionMap[_transactionsPersonNameColumnName] as String,
+            contactName:
+                transactionMap[_transactionsContactNameColumnName] as String,
             value: transactionMap[_transactionsValueColumnName] as int,
             type: transactionMap[_transactionsTypeColumnName] == 1
                 ? TransactionType.minus
@@ -105,19 +124,19 @@ class DatabaseService {
         .toList();
   }
 
-  Future<List<Transaction>> getPersonsTransactions(String personName) async {
+  Future<List<Transaction>> getContactsTransactions(String contactName) async {
     final db = await database;
     final transactionsTable = await db.query(
       _transactionsTableName,
-      where: '$_transactionsPersonNameColumnName = ?',
-      whereArgs: [personName],
+      where: '$_transactionsContactNameColumnName = ?',
+      whereArgs: [contactName],
     );
     return transactionsTable
         .map(
           (transactionMap) => Transaction(
             id: transactionMap[_transactionsIdColumnName] as int,
-            personName:
-                transactionMap[_transactionsPersonNameColumnName] as String,
+            contactName:
+                transactionMap[_transactionsContactNameColumnName] as String,
             value: transactionMap[_transactionsValueColumnName] as int,
             type: transactionMap[_transactionsTypeColumnName] == 1
                 ? TransactionType.minus
@@ -130,7 +149,7 @@ class DatabaseService {
   Future<void> addTransaction(Transaction transaction) async {
     final db = await database;
     await db.insert(_transactionsTableName, {
-      _transactionsPersonNameColumnName: transaction.personName,
+      _transactionsContactNameColumnName: transaction.contactName,
       _transactionsIdColumnName: transaction.id,
       _transactionsValueColumnName: transaction.value,
       _transactionsTypeColumnName: transaction.type == TransactionType.minus
