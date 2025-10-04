@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_project/models/contact_model.dart';
 
 class MainContactComponent extends StatelessWidget {
-  final Contact? contact;
+  final ContactObject? contact;
 
   const MainContactComponent({super.key, this.contact});
 

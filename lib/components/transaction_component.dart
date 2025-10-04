@@ -3,7 +3,7 @@ import 'package:flutter_project/models/transaction_model.dart';
 import 'package:flutter_project/currency_input_formatter.dart';
 
 class TransactionComponent extends StatelessWidget {
-  final Transaction transaction;
+  final TransactionObject transaction;
 
   const TransactionComponent({super.key, required this.transaction});
 

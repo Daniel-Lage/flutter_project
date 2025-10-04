@@ -15,8 +15,8 @@ class ContactPage extends StatefulWidget {
 
 class _ContactPageState extends State<ContactPage> {
   final String initialText = CurrencyInputFormatter.formatter.format(0);
-  Contact? _contact;
-  List<Transaction> _transactionsList = <Transaction>[];
+  ContactObject? _contact;
+  List<TransactionObject> _transactionsList = <TransactionObject>[];
   final TextEditingController _toController = TextEditingController();
   final TextEditingController _fromController = TextEditingController();
   final DatabaseService _databaseService = DatabaseService.instance;
@@ -29,7 +29,7 @@ class _ContactPageState extends State<ContactPage> {
 
     final value = toValue == 0 ? fromValue : -toValue;
 
-    final newTransaction = Transaction(
+    final newTransaction = TransactionObject(
       contactName: _contact!.name,
       id: _transactionsList.length,
       value: value.abs(),
@@ -59,7 +59,7 @@ class _ContactPageState extends State<ContactPage> {
 
       if (args == null) return;
 
-      Contact selectedContact = args as Contact;
+      ContactObject selectedContact = args as ContactObject;
       setState(() {
         _contact = selectedContact;
       });

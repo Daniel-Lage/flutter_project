@@ -1,6 +1,6 @@
 import 'package:flutter_project/models/contact_model.dart';
 import 'package:flutter_project/models/transaction_model.dart';
-import 'package:sqflite/sqflite.dart' hide Transaction;
+import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseService {
@@ -42,7 +42,7 @@ class DatabaseService {
     },
   );
 
-  Future<void> addContact(Contact contact) async {
+  Future<void> addContact(ContactObject contact) async {
     final db = await database;
 
     final hasContact = (await db.query(
@@ -83,12 +83,12 @@ class DatabaseService {
     }
   }
 
-  Future<List<Contact>> getContactsTable() async {
+  Future<List<ContactObject>> getContactsTable() async {
     final db = await database;
     final contactsTable = await db.query(_contactsTableName);
     return contactsTable
         .map(
-          (contactMap) => Contact(
+          (contactMap) => ContactObject(
             name: contactMap[_contactsNameColumnName] as String,
             debt: contactMap[_contactsDebtColumnName] as int,
           ),
@@ -96,7 +96,7 @@ class DatabaseService {
         .toList();
   }
 
-  Future<void> updateContact(Contact contact) async {
+  Future<void> updateContact(ContactObject contact) async {
     final db = await database;
     await db.update(
       _contactsTableName,
@@ -106,12 +106,12 @@ class DatabaseService {
     );
   }
 
-  Future<List<Transaction>> getTransactionsTable() async {
+  Future<List<TransactionObject>> getTransactionsTable() async {
     final db = await database;
     final transactionsTable = await db.query(_transactionsTableName);
     return transactionsTable
         .map(
-          (transactionMap) => Transaction(
+          (transactionMap) => TransactionObject(
             id: transactionMap[_transactionsIdColumnName] as int,
             contactName:
                 transactionMap[_transactionsContactNameColumnName] as String,
@@ -124,7 +124,9 @@ class DatabaseService {
         .toList();
   }
 
-  Future<List<Transaction>> getContactsTransactions(String contactName) async {
+  Future<List<TransactionObject>> getContactsTransactions(
+    String contactName,
+  ) async {
     final db = await database;
     final transactionsTable = await db.query(
       _transactionsTableName,
@@ -133,7 +135,7 @@ class DatabaseService {
     );
     return transactionsTable
         .map(
-          (transactionMap) => Transaction(
+          (transactionMap) => TransactionObject(
             id: transactionMap[_transactionsIdColumnName] as int,
             contactName:
                 transactionMap[_transactionsContactNameColumnName] as String,
@@ -146,7 +148,7 @@ class DatabaseService {
         .toList();
   }
 
-  Future<void> addTransaction(Transaction transaction) async {
+  Future<void> addTransaction(TransactionObject transaction) async {
     final db = await database;
     await db.insert(_transactionsTableName, {
       _transactionsContactNameColumnName: transaction.contactName,

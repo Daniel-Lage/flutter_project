@@ -3,7 +3,7 @@ import 'package:flutter_project/models/contact_model.dart';
 import 'package:flutter_project/currency_input_formatter.dart';
 
 class ContactComponent extends StatelessWidget {
-  final Contact contact;
+  final ContactObject contact;
   final void Function()? delete;
   final void Function()? goTo;
 

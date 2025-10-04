@@ -1,10 +1,10 @@
-class Transaction {
+class TransactionObject {
   final String contactName;
   final int id;
   final int value;
   final TransactionType type;
 
-  Transaction({
+  TransactionObject({
     required this.contactName,
     required this.id,
     required this.value,

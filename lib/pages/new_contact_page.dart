@@ -16,7 +16,7 @@ class _NewContactPageState extends State<NewContactPage> {
   String text = "";
 
   void _addContact() {
-    final contact = Contact(name: text);
+    final contact = ContactObject(name: text);
     _databaseService.addContact(contact);
     Navigator.pop(context, contact);
   }
@@ -26,7 +26,6 @@ class _NewContactPageState extends State<NewContactPage> {
     appBar: AppBar(
       backgroundColor: Theme.of(context).colorScheme.primary,
       iconTheme: IconThemeData(color: Theme.of(context).colorScheme.onPrimary),
-
       title: Text(
         'Criar contato',
         style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
