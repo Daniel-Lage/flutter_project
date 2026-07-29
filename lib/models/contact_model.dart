@@ -1,11 +1,25 @@
 class ContactObject {
+  static String tableName = "contacts";
+  static String nameColumnName = "name";
+  static String balanceColumnName = "balance";
+
   final String name;
   int balance;
   final DateTime? createdAt;
 
   ContactObject({required this.name, this.balance = 0, this.createdAt});
 
-  Map<String, Object> toMap() => {'name': name, "balance": balance};
+  Map<String, Object?> toMap() => {
+    nameColumnName: name,
+    balanceColumnName: balance,
+  };
+
+  factory ContactObject.fromMap(Map<String, Object?> map) {
+    return ContactObject(
+      name: map[nameColumnName] as String,
+      balance: map[balanceColumnName] as int,
+    );
+  }
 }
 
 class ContactCompareFunction {

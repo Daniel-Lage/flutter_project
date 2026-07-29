@@ -18,7 +18,6 @@ class PreferencesPage extends StatefulWidget {
 class _PreferencesPageState extends State<PreferencesPage> {
   PreferenceNotifier? _preferences;
   final PreferencePageActions _actions = PreferencePageActions();
-  final DatabaseService _databaseService = DatabaseService.instance;
 
   @override
   void initState() {
@@ -34,7 +33,7 @@ class _PreferencesPageState extends State<PreferencesPage> {
     _actions.updatedIsUsingLocalContacts = true;
     if (await FlutterContacts.requestPermission()) {
       for (var localContact in (await FlutterContacts.getContacts())) {
-        await _databaseService.addContact(
+        await DatabaseService.instance.addContact(
           ContactObject(name: localContact.displayName),
         );
       }
@@ -45,14 +44,14 @@ class _PreferencesPageState extends State<PreferencesPage> {
     _actions.updatedIsUsingLocalContacts = true;
     if (await FlutterContacts.requestPermission()) {
       for (var localContact in (await FlutterContacts.getContacts())) {
-        await _databaseService.deleteContact(localContact.displayName);
+        await DatabaseService.instance.deleteContact(localContact.displayName);
       }
     }
   }
 
   Future<void> _eraseData() async {
     _actions.dataErased = true;
-    await _databaseService.resetDatabase();
+    await DatabaseService.instance.resetDatabase();
   }
 
   Future<void> _eraseDataDialogBuilder(BuildContext context) =>

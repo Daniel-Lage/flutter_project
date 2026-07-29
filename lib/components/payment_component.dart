@@ -46,7 +46,7 @@ class PaymentComponent extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  PaymentObject.currencyFormat.format(payment.value / 100),
+                  PaymentObject.formatCurrency(payment.value),
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 20,

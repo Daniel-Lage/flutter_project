@@ -13,10 +13,9 @@ class ContactPage extends StatefulWidget {
 }
 
 class _ContactPageState extends State<ContactPage> {
-  bool _updated = false;
+  ContactPageAction _action = ContactPageAction.none;
   ContactObject? _contact;
   List<PaymentObject> _paymentsList = <PaymentObject>[];
-  final DatabaseService _databaseService = DatabaseService.instance;
 
   int sendingValue = 0;
   int receivingValue = 0;
@@ -36,12 +35,30 @@ class _ContactPageState extends State<ContactPage> {
   }
 
   Future<void> loadState() async {
-    final paymentsTable = await _databaseService.getContactsPayments(
+    final paymentsTable = await DatabaseService.instance.getContactsPayments(
       _contact!.name,
     );
 
     setState(() {
       _paymentsList = paymentsTable;
+    });
+  }
+
+  void _updateBalance() {
+    var newBalance = 0;
+
+    for (var payment in _paymentsList) {
+      final value = payment.type == PaymentType.receiving
+          ? payment.value
+          : -payment.value;
+
+      newBalance += value;
+
+      DatabaseService.instance.updateContact(_contact!);
+    }
+
+    setState(() {
+      _contact!.balance = newBalance;
     });
   }
 
@@ -57,17 +74,12 @@ class _ContactPageState extends State<ContactPage> {
 
     final newPayment = result.payment!;
 
-    final value = newPayment.type == PaymentType.receiving
-        ? newPayment.value
-        : -newPayment.value;
-
-    newPayment.id = await _databaseService.addPayment(newPayment);
+    newPayment.id = await DatabaseService.instance.addPayment(newPayment);
 
     setState(() {
-      _contact!.balance += value;
-      _databaseService.updateContact(_contact!);
       _paymentsList.add(newPayment);
-      _updated = true;
+      _updateBalance();
+      _action = ContactPageAction.update;
     });
   }
 
@@ -79,20 +91,39 @@ class _ContactPageState extends State<ContactPage> {
             )
             as PaymentResult;
 
-    if (result.action != PaymentPageAction.delete) return;
-
-    await _databaseService.deletePayment(payment);
-
-    final value = payment.type == PaymentType.receiving
-        ? payment.value
-        : -payment.value;
+    if (result.action == PaymentPageAction.none) return;
 
     setState(() {
-      _contact!.balance -= value;
-      _databaseService.updateContact(_contact!);
-      _paymentsList.removeWhere((p) => p.id == payment.id);
-      _updated = true;
+      _action = ContactPageAction.update;
     });
+
+    if (result.action == PaymentPageAction.delete) {
+      await DatabaseService.instance.deletePayment(payment);
+
+      setState(() {
+        _paymentsList.removeWhere((p) => p.id == payment.id);
+      });
+
+      _updateBalance();
+    }
+
+    if (result.action == PaymentPageAction.update) {
+      final newContact = await DatabaseService.instance.getContactByName(
+        _contact!.name,
+      );
+
+      setState(() {
+        _paymentsList = _paymentsList.map((payment) {
+          if (payment.id == result.payment.id) {
+            return result.payment;
+          }
+
+          return payment;
+        }).toList();
+
+        _contact = newContact;
+      });
+    }
   }
 
   Future<void> _deleteContactDialogBuilder(BuildContext context) =>
@@ -186,14 +217,9 @@ class _ContactPageState extends State<ContactPage> {
           onPopInvokedWithResult: (didPop, result) {
             if (didPop) return;
             if (result == null) {
-              Navigator.of(context).pop(
-                ContactResult(
-                  contact: _contact!,
-                  action: _updated
-                      ? ContactPageAction.update
-                      : ContactPageAction.none,
-                ),
-              );
+              Navigator.of(
+                context,
+              ).pop(ContactResult(contact: _contact!, action: _action));
             } else {
               Navigator.of(context).pop(result);
             }
@@ -241,14 +267,9 @@ class _ContactPageState extends State<ContactPage> {
 
               leading: BackButton(
                 onPressed: () {
-                  Navigator.of(context).pop(
-                    ContactResult(
-                      contact: _contact!,
-                      action: _updated
-                          ? ContactPageAction.update
-                          : ContactPageAction.none,
-                    ),
-                  );
+                  Navigator.of(
+                    context,
+                  ).pop(ContactResult(contact: _contact!, action: _action));
                 },
               ),
             ),
@@ -282,9 +303,7 @@ class _ContactPageState extends State<ContactPage> {
                           ),
                         ),
                         Text(
-                          PaymentObject.currencyFormat.format(
-                            _contact!.balance.abs() / 100,
-                          ),
+                          PaymentObject.formatCurrency(_contact!.balance.abs()),
                           textAlign: TextAlign.start,
                           style: TextStyle(
                             fontSize: 30,

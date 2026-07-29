@@ -53,9 +53,7 @@ class ContactComponent extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    PaymentObject.currencyFormat.format(
-                      contact.balance.abs() / 100,
-                    ),
+                    PaymentObject.formatCurrency(contact.balance.abs()),
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 20,

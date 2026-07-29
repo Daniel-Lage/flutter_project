@@ -46,8 +46,8 @@ jobs:
         with:
           artifacts: "build/app/outputs/flutter-apk/*.apk"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          body: "APK gerado automaticamente para a versão ${{ github.ref_name }}."
+          tag: ${{ github.sha }}
+          name: ${{ github.ref_name }} - ${{ github.event.head_commit.timestamp }}
+          body: "Release ${{ github.event.head_commit.timestamp }} da Branch: ${{ github.ref_name }}. "
           draft: false
           prerelease: false

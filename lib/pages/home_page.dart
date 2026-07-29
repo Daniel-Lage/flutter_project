@@ -16,14 +16,12 @@ class _HomePageState extends State<HomePage> {
   ContactCompareKey _compareKey = ContactCompareKey.balance;
   bool _listIsReversed = false;
 
-  final DatabaseService _databaseService = DatabaseService.instance;
-
   _HomePageState() {
     loadState();
   }
 
   Future<void> loadState() async {
-    final contactTable = await _databaseService.getContactsTable();
+    final contactTable = await DatabaseService.instance.getContactsTable();
 
     setState(() {
       _contactList = contactTable;
@@ -39,7 +37,7 @@ class _HomePageState extends State<HomePage> {
 
     final newContact = result.contact!;
 
-    _databaseService.addContact(newContact);
+    DatabaseService.instance.addContact(newContact);
 
     setState(() {
       _contactList.add(newContact);
@@ -73,7 +71,7 @@ class _HomePageState extends State<HomePage> {
           (contact) => contact.name == deletedContact.name,
         );
 
-        _databaseService.deleteContact(deletedContact.name);
+        DatabaseService.instance.deleteContact(deletedContact.name);
 
         setState(() {
           _contactList.removeAt(index);

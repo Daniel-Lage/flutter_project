@@ -2,11 +2,23 @@ import 'package:intl/intl.dart';
 import 'package:myledger/models/contact_model.dart';
 
 class PaymentObject {
+  static String tableName = "payments";
+  static String contactNameColumnName = "contactName";
+  static String idColumnName = "id";
+  static String valueColumnName = "value";
+  static String typeColumnName = "type";
+  static String createdAtColumnName = "createdAt";
+  static String descriptionColumnName = "description";
+
   static final DateFormat dateFormat = DateFormat("dd/MM/yyyy");
-  static final NumberFormat currencyFormat = NumberFormat.simpleCurrency(
+  static final NumberFormat _currencyFormat = NumberFormat.simpleCurrency(
     locale: "pt_BR",
     decimalDigits: 2,
   );
+
+  static String formatCurrency(int n) {
+    return _currencyFormat.format(n / 100);
+  }
 
   int? id;
   final String contactName;
@@ -24,6 +36,29 @@ class PaymentObject {
     this.createdAt,
     this.description,
   });
+
+  Map<String, Object?> toMap() => {
+    contactNameColumnName: contactName,
+    valueColumnName: value,
+    typeColumnName: type == PaymentType.receiving ? 1 : 0,
+    createdAtColumnName: DateTime.now().millisecondsSinceEpoch,
+    descriptionColumnName: description ?? "",
+  };
+
+  factory PaymentObject.fromMap(Map<String, Object?> map) {
+    return PaymentObject(
+      id: map[idColumnName] as int,
+      contactName: map[contactNameColumnName] as String,
+      value: map[valueColumnName] as int,
+      type: map[typeColumnName] == 1
+          ? PaymentType.receiving
+          : PaymentType.sending,
+      description: map[descriptionColumnName] as String?,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        map[createdAtColumnName] as int,
+      ),
+    );
+  }
 }
 
 enum PaymentType { receiving, sending }
@@ -40,6 +75,21 @@ class NewPaymentResult {
   NewPaymentResult({required this.payment});
 }
 
+class EditPaymentArguments {
+  final PaymentObject payment;
+
+  EditPaymentArguments({required this.payment});
+}
+
+class EditPaymentResult {
+  final PaymentObject? payment;
+  final EditPaymentPageAction? action;
+
+  EditPaymentResult({required this.payment, required this.action});
+}
+
+enum EditPaymentPageAction { description, value, none }
+
 class PaymentArguments {
   final PaymentObject payment;
   final ContactObject contact;
@@ -48,12 +98,13 @@ class PaymentArguments {
 }
 
 class PaymentResult {
-  final PaymentPageAction? action;
+  final PaymentObject payment;
+  final PaymentPageAction action;
 
-  PaymentResult({required this.action});
+  PaymentResult({required this.payment, required this.action});
 }
 
-enum PaymentPageAction { delete, none }
+enum PaymentPageAction { delete, update, none }
 
 String formatSimpleDate(DateTime date) {
   return "${date.day}/${date.month}";

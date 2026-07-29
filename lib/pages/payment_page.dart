@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myledger/models/contact_model.dart';
 import 'package:myledger/models/payment_model.dart';
+import 'package:myledger/services/database_service.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({super.key});
@@ -11,6 +12,8 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
+  PaymentPageAction _action = PaymentPageAction.none;
+
   PaymentObject? _payment;
   ContactObject? _contact;
 
@@ -57,9 +60,12 @@ class _PaymentPageState extends State<PaymentPage> {
             GestureDetector(
               onTap: () {
                 Navigator.of(context).pop();
-                Navigator.of(
-                  context,
-                ).pop(PaymentResult(action: PaymentPageAction.delete));
+                Navigator.of(context).pop(
+                  PaymentResult(
+                    action: PaymentPageAction.delete,
+                    payment: _payment!,
+                  ),
+                );
               },
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -76,6 +82,43 @@ class _PaymentPageState extends State<PaymentPage> {
           ],
         ),
       );
+
+  Future<void> _goToEditPayment() async {
+    EditPaymentResult result =
+        await Navigator.of(context).pushNamed(
+              "/edit_payment",
+              arguments: EditPaymentArguments(payment: _payment!),
+            )
+            as EditPaymentResult;
+
+    if (result.action == EditPaymentPageAction.none) return;
+
+    await DatabaseService.instance.updatePayment(result.payment!);
+
+    setState(() {
+      _action = PaymentPageAction.update;
+    });
+
+    if (result.action == EditPaymentPageAction.value) {
+      setState(() {
+        final oldValue = _payment!.type == PaymentType.receiving
+            ? _payment!.value
+            : -_payment!.value;
+
+        final newValue = result.payment!.type == PaymentType.receiving
+            ? result.payment!.value
+            : -result.payment!.value;
+
+        _contact!.balance += newValue - oldValue;
+      });
+
+      await DatabaseService.instance.updateContact(_contact!);
+    }
+
+    setState(() {
+      _payment = result.payment!;
+    });
+  }
 
   Widget loading() => Scaffold(
     appBar: AppBar(
@@ -120,7 +163,7 @@ class _PaymentPageState extends State<PaymentPage> {
             if (args == null) {
               Navigator.of(
                 context,
-              ).pop(PaymentResult(action: PaymentPageAction.none));
+              ).pop(PaymentResult(action: _action, payment: _payment!));
             } else {
               Navigator.of(context).pop(args);
             }
@@ -156,6 +199,13 @@ class _PaymentPageState extends State<PaymentPage> {
                                 _deletePaymentDialogBuilder(context);
                               },
                             ),
+                            ListTile(
+                              leading: Icon(Icons.edit),
+                              title: Text("Editar pagamento"),
+                              onTap: () {
+                                _goToEditPayment();
+                              },
+                            ),
                           ],
                         ),
                       );
@@ -169,7 +219,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 onPressed: () {
                   Navigator.of(
                     context,
-                  ).pop(PaymentResult(action: PaymentPageAction.none));
+                  ).pop(PaymentResult(action: _action, payment: _payment!));
                 },
               ),
             ),
@@ -192,7 +242,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
 
                   Text(
-                    PaymentObject.currencyFormat.format(_payment!.value / 100),
+                    PaymentObject.formatCurrency(_payment!.value),
                     textAlign: TextAlign.start,
                     style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
                   ),

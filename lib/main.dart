@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:myledger/notifiers/preferences_notifier.dart';
+import 'package:myledger/pages/edit_payment_page.dart';
 import 'package:myledger/pages/home_page.dart';
 import 'package:myledger/pages/contact_page.dart';
 import 'package:myledger/pages/new_contact_page.dart';
@@ -64,6 +65,7 @@ class MyApp extends StatelessWidget {
       '/preferences': (context) => PreferencesPage(),
       '/new_contact': (context) => NewContactPage(),
       '/new_payment': (context) => NewPaymentPage(),
+      '/edit_payment': (context) => EditPaymentPage(),
       '/payment': (context) => PaymentPage(),
     },
   );
